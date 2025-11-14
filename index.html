@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Acotaciones para Carpintería</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #8B4513;
+            --secondary-color: #D2691E;
+            --light-color: #F5DEB3;
+            --dark-color: #654321;
+            --text-color: #333;
+            --white: #fff;
+            --success-color: #2E8B57;
+            --danger-color: #e74c3c;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f9f9f9;
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: var(--primary-color);
+            color: var(--white);
+            padding: 20px 0;
+            text-align: center;
+            border-radius: var(--border-radius);
+            margin-bottom: 30px;
+            box-shadow: var(--box-shadow);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        @media (max-width: 992px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .container {
+                padding: 10px;
+            }
+            
+            header {
+                padding: 15px 0;
+                margin-bottom: 20px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .subtitle {
+                font-size: 0.9rem;
+            }
+        }
+        
+        .form-section, .preview-section {
+            background-color: var(--white);
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+        
+        @media (max-width: 576px) {
+            .form-section, .preview-section {
+                padding: 15px;
+            }
+        }
+        
+        h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light-color);
+            font-size: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--secondary-color);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(210, 105, 30, 0.2);
+        }
+        
+        .dimensions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        @media (max-width: 576px) {
+            .dimensions {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+        
+        .dimensions-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .dimension-input {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .dimension-input input {
+            flex: 1;
+        }
+        
+        .unit-select {
+            width: 80px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        .btn {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            background-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-add {
+            background-color: var(--primary-color);
+            margin-top: 10px;
+        }
+        
+        .btn-add:hover {
+            background-color: var(--dark-color);
+        }
+        
+        .btn-generate {
+            width: 100%;
+            margin-top: 20px;
+            padding: 15px;
+            font-size: 1.1rem;
+        }
+        
+        .btn-export {
+            background-color: var(--success-color);
+            margin-top: 15px;
+        }
+        
+        .btn-export:hover {
+            background-color: #1F6B42;
+        }
+        
+        .btn-remove {
+            background-color: var(--danger-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+        
+        .btn-remove:hover {
+            background-color: #c0392b;
+            transform: scale(1.1);
+        }
+        
+        .cuts-list {
+            margin-top: 30px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        
+        .cuts-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .cuts-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .cuts-list::-webkit-scrollbar-thumb {
+            background: var(--secondary-color);
+            border-radius: 10px;
+        }
+        
+        .cut-item {
+            background-color: var(--light-color);
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--secondary-color);
+            display: flex;
+            flex-direction: column;
+            transition: var(--transition);
+        }
+        
+        .cut-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .cut-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .cut-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .cut-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        @media (max-width: 576px) {
+            .cut-content {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+        
+        .cut-details {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        
+        .cut-detail {
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 8px;
+            border-radius: 4px;
+        }
+        
+        .cut-preview {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .piece-canvas {
+            width: 100%;
+            height: 150px;
+            background-color: #f8f8f8;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .preview-container {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            background-color: #f8f8f8;
+        }
+        
+        #previewCanvas {
+            width: 100%;
+            height: 400px;
+            display: block;
+        }
+        
+        @media (max-width: 768px) {
+            #previewCanvas {
+                height: 300px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            #previewCanvas {
+                height: 250px;
+            }
+        }
+        
+        .instructions {
+            margin-top: 20px;
+            background-color: var(--light-color);
+            padding: 15px;
+            border-radius: 4px;
+        }
+        
+        .instructions h3 {
+            margin-bottom: 10px;
+            color: var(--dark-color);
+        }
+        
+        .instruction-item {
+            margin-bottom: 8px;
+            padding-left: 15px;
+            position: relative;
+        }
+        
+        .instruction-item:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--secondary-color);
+        }
+        
+        .export-options {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .export-options label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 0;
+            font-weight: normal;
+        }
+        
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            color: #777;
+            font-size: 0.9rem;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .empty-message {
+            text-align: center;
+            color: #777;
+            font-style: italic;
+            padding: 20px;
+        }
+        
+        .pdf-page {
+            page-break-after: always;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+        }
+        
+        .pdf-page:last-child {
+            page-break-after: auto;
+        }
+        
+        .pdf-drawings-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        @media (max-width: 600px) {
+            .pdf-drawings-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background-color: var(--success-color);
+            color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            z-index: 1000;
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.error {
+            background-color: var(--danger-color);
+        }
+        
+        @media (max-width: 576px) {
+            .notification {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                transform: translateY(-150%);
+            }
+            
+            .notification.show {
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Sistema de Acotaciones para Carpintería</h1>
+            <p class="subtitle">Genera instrucciones de corte claras para tus empleados</p>
+        </header>
+        
+        <div class="main-content">
+            <section class="form-section">
+                <h2>Agregar Pieza para Cortar</h2>
+                
+                <div class="form-group">
+                    <label for="pieceName">Nombre de la pieza</label>
+                    <input type="text" id="pieceName" placeholder="Ej: Tabla de pino, Marco de ventana...">
+                </div>
+                
+                <div class="form-group">
+                    <label for="materialType">Tipo de material</label>
+                    <select id="materialType">
+                        <option value="madera">Madera</option>
+                        <option value="mdf">MDF</option>
+                        <option value="triplay">Triplay</option>
+                        <option value="melamina">Melamina</option>
+                        <option value="otro">Otro</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Dimensiones</label>
+                    <div class="dimensions">
+                        <div class="dimension-input">
+                            <label for="length">Largo</label>
+                            <input type="number" id="length" min="1" value="100">
+                            <select class="unit-select" id="length-unit">
+                                <option value="cm">cm</option>
+                                <option value="mm">mm</option>
+                                <option value="m">m</option>
+                            </select>
+                        </div>
+                        <div class="dimension-input">
+                            <label for="width">Ancho</label>
+                            <input type="number" id="width" min="1" value="50">
+                            <select class="unit-select" id="width-unit">
+                                <option value="cm">cm</option>
+                                <option value="mm">mm</option>
+                                <option value="m">m</option>
+                            </select>
+                        </div>
+                        <div class="dimension-input">
+                            <label for="thickness">Espesor</label>
+                            <input type="number" id="thickness" min="0.1" step="0.1" value="2.5">
+                            <select class="unit-select" id="thickness-unit">
+                                <option value="cm">cm</option>
+                                <option value="mm">mm</option>
+                                <option value="m">m</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+
+                
+                <div class="form-group">
+                    <label for="quantity">Cantidad</label>
+                    <input type="number" id="quantity" min="1" value="1">
+                </div>
+                
+                <div class="form-group">
+                    <label for="notes">Notas adicionales</label>
+                    <textarea id="notes" rows="3" placeholder="Instrucciones especiales, tipo de corte, etc."></textarea>
+                </div>
+                
+                <button class="btn btn-add" id="addPiece">
+                    <span>+</span> Agregar Pieza
+                </button>
+                
+                <!-- Botón de generar instrucciones eliminado para dejar más espacio -->
+                
+
+                
+                <button class="btn btn-export" id="exportPDF">
+                    Exportar a PDF
+                </button>
+            </section>
+            
+            <section class="preview-section">
+                <h2>Lista de Cortes</h2>
+                
+                <div class="cuts-list" id="cutsList">
+                    <!-- Las piezas agregadas aparecerán aquí -->
+                    <p class="empty-message">No hay piezas agregadas. Agrega al menos una pieza para ver la lista de cortes.</p>
+                </div>
+                
+                <!-- Contenedor de instrucciones eliminado para dar más espacio a la lista de cortes -->
+            </section>
+        </div>
+        
+        <footer>
+            <p>Sistema de Acotaciones para Carpintería &copy; 2023</p>
+        </footer>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // Array para almacenar las piezas
+        let pieces = [];
+        
+        // Elementos DOM
+        const pieceNameInput = document.getElementById('pieceName');
+        const materialTypeSelect = document.getElementById('materialType');
+        const lengthInput = document.getElementById('length');
+        const widthInput = document.getElementById('width');
+        const thicknessInput = document.getElementById('thickness');
+        const lengthUnitSelect = document.getElementById('length-unit');
+        const widthUnitSelect = document.getElementById('width-unit');
+        const thicknessUnitSelect = document.getElementById('thickness-unit');
+        const quantityInput = document.getElementById('quantity');
+        const notesInput = document.getElementById('notes');
+        const addPieceButton = document.getElementById('addPiece');
+        const exportPDFButton = document.getElementById('exportPDF');
+        const cutsList = document.getElementById('cutsList');
+        const notification = document.getElementById('notification');
+        
+        // Mostrar notificación
+        function showNotification(message, isError = false) {
+            notification.textContent = message;
+            notification.className = 'notification' + (isError ? ' error' : '');
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        // No configuration needed for unit selectors as they are standard select elements
+        
+        // Agregar pieza a la lista
+        addPieceButton.addEventListener('click', function() {
+            const name = pieceNameInput.value.trim();
+            const material = materialTypeSelect.value;
+            const length = parseFloat(lengthInput.value);
+            const width = parseFloat(widthInput.value);
+            const thickness = parseFloat(thicknessInput.value);
+            const quantity = parseInt(quantityInput.value);
+            const notes = notesInput.value.trim();
+            
+            if (!name) {
+                showNotification('Por favor ingresa un nombre para la pieza', true);
+                return;
+            }
+            
+            if (isNaN(length) || length <= 0) {
+                showNotification('Por favor ingresa un largo válido', true);
+                return;
+            }
+            
+            if (isNaN(width) || width <= 0) {
+                showNotification('Por favor ingresa un ancho válido', true);
+                return;
+            }
+            
+            if (isNaN(thickness) || thickness <= 0) {
+                showNotification('Por favor ingresa un espesor válido', true);
+                return;
+            }
+            
+            if (isNaN(quantity) || quantity <= 0) {
+                showNotification('Por favor ingresa una cantidad válida', true);
+                return;
+            }
+            
+            const piece = {
+                id: Date.now(), // ID único basado en timestamp
+                name,
+                material,
+                length,
+                width,
+                thickness,
+                lengthUnit: lengthUnitSelect.value,
+                widthUnit: widthUnitSelect.value,
+                thicknessUnit: thicknessUnitSelect.value,
+                quantity,
+                notes
+            };
+            
+            pieces.push(piece);
+            updateCutsList();
+            clearForm();
+            
+            showNotification('Pieza agregada correctamente');
+        });
+        
+        // Actualizar la lista de cortes
+        function updateCutsList() {
+            if (pieces.length === 0) {
+                cutsList.innerHTML = '<p class="empty-message">No hay piezas agregadas. Agrega al menos una pieza para ver la vista previa.</p>';
+                return;
+            }
+            
+            cutsList.innerHTML = '';
+            
+            pieces.forEach(piece => {
+                const cutItem = document.createElement('div');
+                cutItem.className = 'cut-item';
+                cutItem.innerHTML = `
+                    <div class="cut-header">
+                        <div class="cut-title">${piece.name} (x${piece.quantity})</div>
+                        <button class="btn-remove" data-id="${piece.id}">×</button>
+                    </div>
+                    <div class="cut-content">
+                        <div class="cut-details">
+                            <div class="cut-detail"><strong>Material:</strong> ${getMaterialName(piece.material)}</div>
+                            <div class="cut-detail"><strong>Dimensiones:</strong> ${formatDimension(piece.length)} ${piece.lengthUnit} × ${formatDimension(piece.width)} ${piece.widthUnit}</div>
+                            <div class="cut-detail"><strong>Espesor:</strong> ${formatDimension(piece.thickness)} ${piece.thicknessUnit}</div>
+                            ${piece.notes ? `<div class="cut-detail"><strong>Notas:</strong> ${piece.notes}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+                cutsList.appendChild(cutItem);
+            });
+            
+            // Agregar event listeners a los botones de eliminar
+            document.querySelectorAll('.btn-remove').forEach(button => {
+                button.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'));
+                    removePiece(id);
+                });
+            });
+        }
+        
+        // Formatear dimensión según la unidad
+        function formatDimension(value, unit) {
+            return value.toFixed(1);
+        }
+        
+        // Obtener nombre del material
+        function getMaterialName(materialKey) {
+            const materials = {
+                'madera': 'Madera',
+                'mdf': 'MDF',
+                'triplay': 'Triplay',
+                'melamina': 'Melamina',
+                'otro': 'Otro'
+            };
+            
+            return materials[materialKey] || 'Desconocido';
+        }
+        
+        // Eliminar pieza
+        function removePiece(id) {
+            pieces = pieces.filter(piece => piece.id !== id);
+                    updateCutsList();
+            showNotification('Pieza eliminada');
+        }
+        
+        // Limpiar formulario
+        function clearForm() {
+            pieceNameInput.value = '';
+            materialTypeSelect.value = 'madera';
+            lengthInput.value = '100';
+            widthInput.value = '50';
+            thicknessInput.value = '2.5';
+            quantityInput.value = '1';
+            notesInput.value = '';
+            pieceNameInput.focus();
+        }
+        
+        // Obtener color según el material
+        function getMaterialColor(material) {
+            const colors = {
+                'madera': '#D2691E',
+                'mdf': '#A0522D',
+                'triplay': '#CD853F',
+                'melamina': '#DEB887',
+                'otro': '#BC8F8F'
+            };
+            
+            return colors[material] || '#D2691E';
+        }
+        
+        // (Funciones de dibujo por canvas eliminadas)
+        
+        // (Generación de medidas en la página eliminada — espacio liberado para la lista de cortes)
+        
+    // Exportar a PDF - VERSIÓN MEJORADA
+        exportPDFButton.addEventListener('click', function() {
+            if (pieces.length === 0) {
+                showNotification('Agrega al menos una pieza antes de exportar a PDF', true);
+                return;
+            }
+            
+            // Configuración de paginación
+            const MAX_DRAWINGS_PER_PAGE = 6; // Máximo de dibujos por página
+            
+            // Crear contenedor principal para el PDF
+            const pdfMainContainer = document.createElement('div');
+            pdfMainContainer.style.fontFamily = 'Arial, sans-serif';
+            pdfMainContainer.style.backgroundColor = 'white';
+            pdfMainContainer.style.width = '800px';
+            pdfMainContainer.style.margin = '0 auto';
+            
+            // Crear páginas de PDF con 4 piezas por página para mejor legibilidad
+            const pages = createPdfPages(pieces, 4);
+            pages.forEach(page => pdfMainContainer.appendChild(page));
+
+            // Agregar el contenedor al documento temporalmente
+            document.body.appendChild(pdfMainContainer);
+            
+            // Generar PDF: renderizar cada página `.pdf-page` por separado para evitar cortes
+            (async function() {
+                const pages = pdfMainContainer.querySelectorAll('.pdf-page');
+                const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
+                const imgWidth = 210; // A4 width in mm
+                const pageHeight = 295; // A4 height in mm
+
+                for (let i = 0; i < pages.length; i++) {
+                    const pageEl = pages[i];
+                    // Renderizar la página a canvas
+                    // eslint-disable-next-line no-await-in-loop
+                    const canvas = await html2canvas(pageEl, { scale: 2, useCORS: true, logging: false });
+                    const imgData = canvas.toDataURL('image/png');
+                    const imgHeight = canvas.height * imgWidth / canvas.width;
+
+                    // Ajustar escala si la imagen es más alta que la página
+                    let drawWidth = imgWidth;
+                    let drawHeight = imgHeight;
+                    if (imgHeight > pageHeight) {
+                        const scaleFactor = pageHeight / imgHeight;
+                        drawHeight = pageHeight;
+                        drawWidth = imgWidth * scaleFactor;
+                    }
+
+                    if (i > 0) pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, 0, drawWidth, drawHeight);
+                }
+
+                pdf.save('instrucciones_corte_carpinteria.pdf');
+
+                // Eliminar el contenedor temporal
+                document.body.removeChild(pdfMainContainer);
+
+                showNotification('PDF generado correctamente');
+            })();
+        });
+        
+        // Función para crear la primera página del PDF (muestra material, largo y ancho)
+        function createPdfFirstPage(pieces) {
+            const page = document.createElement('div');
+            page.className = 'pdf-page';
+            
+            // Título
+            const title = document.createElement('h1');
+            title.textContent = 'Instrucciones de Corte - Carpintería';
+            title.style.textAlign = 'center';
+            title.style.color = '#8B4513';
+            title.style.marginBottom = '20px';
+            title.style.borderBottom = '2px solid #D2691E';
+            title.style.paddingBottom = '10px';
+            page.appendChild(title);
+            
+            // Información general
+            const info = document.createElement('div');
+            info.style.marginBottom = '20px';
+            info.style.padding = '15px';
+            info.style.backgroundColor = '#F5DEB3';
+            info.style.borderRadius = '4px';
+            info.innerHTML = `
+                <p><strong>Fecha:</strong> ${new Date().toLocaleDateString()}</p>
+                <p><strong>Total de piezas:</strong> ${pieces.reduce((sum, piece) => sum + piece.quantity, 0)}</p>
+                <p><strong>Número de tipos de piezas:</strong> ${pieces.length}</p>
+            `;
+            page.appendChild(info);
+            
+            // Lista de piezas
+            const piecesTitle = document.createElement('h2');
+            piecesTitle.textContent = 'Lista de Piezas';
+            piecesTitle.style.color = '#8B4513';
+            piecesTitle.style.marginBottom = '15px';
+            page.appendChild(piecesTitle);
+            
+            pieces.forEach(piece => {
+                const pieceContainer = document.createElement('div');
+                pieceContainer.style.marginBottom = '15px';
+                pieceContainer.style.padding = '15px';
+                pieceContainer.style.border = '1px solid #ddd';
+                pieceContainer.style.borderRadius = '4px';
+                pieceContainer.style.backgroundColor = '#f9f9f9';
+                
+                const pieceTitle = document.createElement('div');
+                pieceTitle.textContent = `${piece.name} (x${piece.quantity})`;
+                pieceTitle.style.fontWeight = 'bold';
+                pieceTitle.style.color = '#8B4513';
+                pieceTitle.style.marginBottom = '10px';
+                pieceContainer.appendChild(pieceTitle);
+                
+                const pieceDetails = document.createElement('div');
+                pieceDetails.style.display = 'grid';
+                pieceDetails.style.gridTemplateColumns = 'repeat(auto-fill, minmax(200px, 1fr))';
+                pieceDetails.style.gap = '10px';
+                pieceDetails.style.marginBottom = '10px';
+                
+                pieceDetails.innerHTML = `
+                    <div style="padding: 5px; background-color: white; border-radius: 4px;">
+                        <strong>Material:</strong> ${getMaterialName(piece.material)}
+                    </div>
+                    <div style="padding: 5px; background-color: white; border-radius: 4px;">
+                        <strong>Largo:</strong> ${formatDimension(piece.length)} ${piece.lengthUnit}
+                    </div>
+                    <div style="padding: 5px; background-color: white; border-radius: 4px;">
+                        <strong>Ancho:</strong> ${formatDimension(piece.width)} ${piece.widthUnit}
+                    </div>
+                    <div style="padding: 5px; background-color: white; border-radius: 4px;">
+                        <strong>Espesor:</strong> ${formatDimension(piece.thickness)} ${piece.thicknessUnit}
+                    </div>
+                    ${piece.notes ? `
+                    <div style="padding: 5px; background-color: white; border-radius: 4px; grid-column: 1 / -1;">
+                        <strong>Notas:</strong> ${piece.notes}
+                    </div>
+                    ` : ''}
+                `;
+                
+                pieceContainer.appendChild(pieceDetails);
+                page.appendChild(pieceContainer);
+            });
+            
+            return page;
+        }
+        
+        // Crear conjunto de páginas con N piezas por página (ej: 4)
+        function createPdfPages(pieces, perPage) {
+            const pages = [];
+            const totalPages = Math.max(1, Math.ceil(pieces.length / perPage));
+            for (let p = 0; p < totalPages; p++) {
+                const slice = pieces.slice(p * perPage, p * perPage + perPage);
+                const page = document.createElement('div');
+                page.className = 'pdf-page';
+
+                // Header en la primera página
+                if (p === 0) {
+                    const title = document.createElement('h1');
+                    title.textContent = 'Instrucciones de Corte - Carpintería';
+                    title.style.textAlign = 'center';
+                    title.style.color = '#8B4513';
+                    title.style.marginBottom = '20px';
+                    title.style.borderBottom = '2px solid #D2691E';
+                    title.style.paddingBottom = '10px';
+                    page.appendChild(title);
+
+                    const info = document.createElement('div');
+                    info.style.marginBottom = '20px';
+                    info.style.padding = '15px';
+                    info.style.backgroundColor = '#F5DEB3';
+                    info.style.borderRadius = '4px';
+                    info.innerHTML = `
+                        <p><strong>Fecha:</strong> ${new Date().toLocaleDateString()}</p>
+                        <p><strong>Total de piezas:</strong> ${pieces.reduce((sum, piece) => sum + piece.quantity, 0)}</p>
+                        <p><strong>Número de tipos de piezas:</strong> ${pieces.length}</p>
+                    `;
+                    page.appendChild(info);
+                } else {
+                    const pageHeader = document.createElement('h2');
+                    pageHeader.textContent = `Lista de Piezas - Página ${p + 1} de ${totalPages}`;
+                    pageHeader.style.textAlign = 'center';
+                    pageHeader.style.color = '#8B4513';
+                    pageHeader.style.marginBottom = '10px';
+                    page.appendChild(pageHeader);
+                }
+
+                // Lista de piezas (slice)
+                slice.forEach(piece => {
+                    const pieceContainer = document.createElement('div');
+                    pieceContainer.style.marginBottom = '15px';
+                    pieceContainer.style.padding = '15px';
+                    pieceContainer.style.border = '1px solid #ddd';
+                    pieceContainer.style.borderRadius = '4px';
+                    pieceContainer.style.backgroundColor = '#f9f9f9';
+
+                    const pieceTitle = document.createElement('div');
+                    pieceTitle.textContent = `${piece.name} (x${piece.quantity})`;
+                    pieceTitle.style.fontWeight = 'bold';
+                    pieceTitle.style.color = '#8B4513';
+                    pieceTitle.style.marginBottom = '10px';
+                    pieceContainer.appendChild(pieceTitle);
+
+                    const pieceDetails = document.createElement('div');
+                    pieceDetails.style.display = 'grid';
+                    pieceDetails.style.gridTemplateColumns = 'repeat(auto-fill, minmax(200px, 1fr))';
+                    pieceDetails.style.gap = '10px';
+                    pieceDetails.style.marginBottom = '10px';
+
+                    pieceDetails.innerHTML = `
+                        <div style="padding: 5px; background-color: white; border-radius: 4px;">
+                            <strong>Material:</strong> ${getMaterialName(piece.material)}
+                        </div>
+                        <div style="padding: 5px; background-color: white; border-radius: 4px;">
+                            <strong>Largo:</strong> ${formatDimension(piece.length)} ${piece.lengthUnit}
+                        </div>
+                        <div style="padding: 5px; background-color: white; border-radius: 4px;">
+                            <strong>Ancho:</strong> ${formatDimension(piece.width)} ${piece.widthUnit}
+                        </div>
+                        <div style="padding: 5px; background-color: white; border-radius: 4px;">
+                            <strong>Espesor:</strong> ${formatDimension(piece.thickness)} ${piece.thicknessUnit}
+                        </div>
+                        ${piece.notes ? `
+                        <div style="padding: 5px; background-color: white; border-radius: 4px; grid-column: 1 / -1;">
+                            <strong>Notas:</strong> ${piece.notes}
+                        </div>
+                        ` : ''}
+                    `;
+
+                    pieceContainer.appendChild(pieceDetails);
+                    page.appendChild(pieceContainer);
+                });
+
+                pages.push(page);
+            }
+            return pages;
+        }
+
+        // Funciones de dibujo para los bocetos han sido eliminadas; los PDFs ya muestran material, largo y ancho en texto.
+    </script>
+</body>
+</html>
